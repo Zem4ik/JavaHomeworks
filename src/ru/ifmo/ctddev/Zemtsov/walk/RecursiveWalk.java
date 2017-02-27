@@ -48,28 +48,20 @@ public class RecursiveWalk {
             try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(inputFileDir), "UTF-8"))) {
                 String line;
                 while ((line = bufferedReader.readLine()) != null) {
-                    Path path = Paths.get(line);
                     try {
+                        Path path = Paths.get(line);
                         if (Files.isDirectory(path)) {
                             Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
                                 @Override
                                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                                    try {
-                                        bufferedWriter.write(getResultString(getChecksum(file), file.toString()));
-                                    } catch (IOException e) {
-                                        System.err.println("I/O exception : " + e.getMessage() + "\nin output file");
-                                    }
+                                    bufferedWriter.write(getResultString(getChecksum(file), file.toString()));
                                     return FileVisitResult.CONTINUE;
                                 }
 
                                 @Override
                                 public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-                                    try {
-                                        bufferedWriter.write(getResultString(ERROR_CHECKSUM, file.toString()));
-                                    } catch (IOException e) {
-                                        System.err.println("I/O exception : " + e.getMessage() + "\nin output file");
-                                    }
                                     System.err.println("Invoked for a file that could not be visited: " + exc.getMessage() + "\nfile with directory: " + path);
+                                    bufferedWriter.write(getResultString(ERROR_CHECKSUM, file.toString()));
                                     return FileVisitResult.CONTINUE;
                                 }
                             });
@@ -77,7 +69,9 @@ public class RecursiveWalk {
                             bufferedWriter.write(getResultString(getChecksum(path), path.toString()));
                         }
                     } catch (IOException e) {
-                        System.err.println("I/O exception : " + e.getMessage() + "\nin file with directory: " + line);
+                        System.err.println("I/O exception : " + e.getMessage() + "\n");
+                    } catch (InvalidPathException e) {
+                        System.err.println("Wrong path string: " + line);
                     }
                 }
             } catch (FileNotFoundException e) {
